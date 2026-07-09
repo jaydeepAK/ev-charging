@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: ev-charging-server
+    runtime: node
+    rootDir: server
+    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy
+    startCommand: npm run start
+    envVars:
+      - key: DATABASE_URL
+        sync: false   # set manually in Render dashboard — don't commit real secrets here
+      - key: JWT_SECRET
+        sync: false
+      - key: PORT
+        value: 10000  # Render's default internal port; it maps this to https for you
