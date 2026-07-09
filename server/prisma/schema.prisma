@@ -1,0 +1,126 @@
+// This file defines your database structure.
+// After editing this file, run:  npx prisma migrate dev --name <description>
+// That command reads this file, generates SQL, and applies it to your DB.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // read from .env, never hardcode credentials
+}
+
+enum Role {
+  CUSTOMER
+  OWNER
+  ADMIN
+}
+
+enum StationStatus {
+  PENDING   // owner registered it, admin hasn't approved yet
+  APPROVED
+  REJECTED
+}
+
+enum ChargerStatus {
+  AVAILABLE
+  IN_USE
+  OFFLINE
+}
+
+enum BookingStatus {
+  BOOKED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  SUCCESS
+  FAILED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String   // bcrypt hash, never plain text
+  role      Role     @default(CUSTOMER)
+  phone     String?
+  createdAt DateTime @default(now())
+
+  // Relations: a User can own many Stations (if role = OWNER)
+  // and can make many Bookings (if role = CUSTOMER)
+  stations  Station[]
+  bookings  Booking[]
+}
+
+model Station {
+  id          Int           @id @default(autoincrement())
+  ownerId     Int
+  owner       User          @relation(fields: [ownerId], references: [id])
+  stationName String
+  address     String
+  latitude    Float
+  longitude   Float
+  city        String
+  status      StationStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+
+  chargers    Charger[]
+
+  @@index([city])       // you'll filter stations by city a lot — index speeds that up
+}
+
+model Charger {
+  id           Int           @id @default(autoincrement())
+  stationId    Int
+  station      Station       @relation(fields: [stationId], references: [id])
+  chargerType  String        // e.g. "Type2", "CCS", "CHAdeMO"
+  power        Float         // in kW
+  pricePerKwh  Float
+  status       ChargerStatus @default(AVAILABLE)
+
+  bookings     Booking[]
+
+  @@index([chargerType])
+}
+
+model Booking {
+  id        Int             @id @default(autoincrement())
+  userId    Int
+  user      User            @relation(fields: [userId], references: [id])
+  chargerId Int
+  charger   Charger         @relation(fields: [chargerId], references: [id])
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime
+  status    BookingStatus   @default(BOOKED)
+  createdAt DateTime        @default(now())
+
+  session   ChargingSession?
+}
+
+model ChargingSession {
+  id             Int       @id @default(autoincrement())
+  bookingId      Int       @unique
+  booking        Booking   @relation(fields: [bookingId], references: [id])
+  energyConsumed Float?    // kWh, filled in on "stop"
+  duration       Int?      // seconds, filled in on "stop"
+  cost           Float?    // computed from energyConsumed * pricePerKwh
+  startTime      DateTime?
+  endTime        DateTime?
+
+  payment        Payment?
+}
+
+model Payment {
+  id            Int             @id @default(autoincrement())
+  sessionId     Int             @unique
+  session       ChargingSession @relation(fields: [sessionId], references: [id])
+  amount        Float
+  paymentMethod String          @default("MOCK")
+  status        PaymentStatus   @default(SUCCESS)
+  transactionId String          @default(cuid())
+  createdAt     DateTime        @default(now())
+}
