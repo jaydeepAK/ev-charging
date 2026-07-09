@@ -7,10 +7,10 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL") // read from .env, never hardcode credentials
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")// read from .env, never hardcode credentials
+  directUrl = env("DIRECT_URL")
 }
-
 enum Role {
   CUSTOMER
   OWNER
