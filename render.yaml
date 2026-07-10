@@ -7,7 +7,9 @@ services:
     startCommand: npm run start
     envVars:
       - key: DATABASE_URL
-        sync: false   # set manually in Render dashboard — don't commit real secrets here
+        sync: false   # pooled (Supavisor) connection string — set manually in Render dashboard
+      - key: DIRECT_URL
+        sync: false   # session-mode pooler string, used only for migrate deploy
       - key: JWT_SECRET
         sync: false
       - key: PORT

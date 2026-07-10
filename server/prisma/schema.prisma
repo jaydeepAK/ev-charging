@@ -8,9 +8,10 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")// read from .env, never hardcode credentials
-  directUrl = env("DIRECT_URL")
+  url       = env("DATABASE_URL") // pooled connection (Supavisor) — used for normal app queries
+  directUrl = env("DIRECT_URL")   // unpooled session connection — used only for migrations
 }
+
 enum Role {
   CUSTOMER
   OWNER
