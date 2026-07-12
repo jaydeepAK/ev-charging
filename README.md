@@ -2,8 +2,8 @@
 
 A full-stack platform for managing EV charging stations — customers browse and book charging slots, station owners manage their stations and chargers, and admins approve stations and monitor platform activity in real time.
 
-**Live demo:** [add your Vercel URL here]
-**API:** [add your Render URL here]
+**Live demo:** https://ev-charging-indol.vercel.app/
+**API:** https://ev-charging-aio3.onrender.com
 
 ---
 
